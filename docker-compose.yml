@@ -39,6 +39,30 @@ services:
       - atahub-network
     restart: unless-stopped
 
+  etl:
+    build:
+      context: ./etl
+      dockerfile: Dockerfile
+    container_name: atahub_etl
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/govcompras
+      - API_BASE_URL=https://dadosabertos.compras.gov.br
+      - REQUESTS_PER_SECOND=3.0
+      - LOG_LEVEL=INFO
+      - ETL_SCHEDULE_ENABLED=true
+      - ETL_SCHEDULE_HOUR=2
+      - ETL_SCHEDULE_MINUTE=0
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./etl:/app
+      - ./etl/logs:/app/logs
+    networks:
+      - atahub-network
+    restart: unless-stopped
+    command: python scheduler.py
+
   frontend:
     build:
       context: ./frontend
