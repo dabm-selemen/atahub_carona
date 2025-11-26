@@ -28,19 +28,31 @@ def run_etl():
     data = resp.json().get('resultado', [])
     print(f"Encontrados {len(data)} registros.")
 
-    for i, row in enumerate(data):
-        if i == 0:
-            print(f"Exemplo de linha: {row}")
+    for row in data:
+        # Mapeamento de campos baseado na resposta da API
+        # numeroAtaRegistroPreco -> numero_arp
+        # numeroControlePncpAta -> codigo_arp_api
+        # codigoUnidadeGerenciadora -> uasg_id (e orgao.codigo)
+        # dataVigenciaInicial -> data_inicio_vigencia
+        # dataVigenciaFinal -> data_fim_vigencia
+        # objeto -> objeto
 
         # Salvar Órgão
-        orgao = row.get('orgaoGerenciador', {})
-        cur.execute("""
-            INSERT INTO orgaos (uasg, nome, uf) VALUES (%s, %s, %s)
-            ON CONFLICT (uasg) DO UPDATE SET nome = EXCLUDED.nome
-        """, (str(orgao.get('codigo')), orgao.get('nome'), orgao.get('siglaUf')))
+        # A resposta da API traz dados do órgão na raiz
+        codigo_orgao = row.get('codigoUnidadeGerenciadora')
+        nome_orgao = row.get('nomeUnidadeGerenciadora')
+        uf_orgao = '' # Não disponível na raiz, talvez ignorar ou buscar de outra forma
+
+        if codigo_orgao:
+            cur.execute("""
+                INSERT INTO orgaos (uasg, nome, uf) VALUES (%s, %s, %s)
+                ON CONFLICT (uasg) DO UPDATE SET nome = EXCLUDED.nome
+            """, (str(codigo_orgao), nome_orgao, uf_orgao))
 
         # Salvar ARP
         arp_uuid_val = str(uuid.uuid4())
+        codigo_arp_api = row.get('numeroControlePncpAta')
+
         cur.execute("""
             INSERT INTO arps (id, codigo_arp_api, numero_arp, uasg_id, data_inicio_vigencia, data_fim_vigencia, objeto)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -48,8 +60,12 @@ def run_etl():
             RETURNING id
         """, (
             arp_uuid_val,
-            str(row.get('codigoArp')), row.get('numeroArp'), str(orgao.get('codigo')),
-            row.get('dataInicioVigencia'), row.get('dataFimVigencia'), row.get('objeto')
+            str(codigo_arp_api),
+            row.get('numeroAtaRegistroPreco'),
+            str(codigo_orgao),
+            row.get('dataVigenciaInicial'),
+            row.get('dataVigenciaFinal'),
+            row.get('objeto')
         ))
 
         arp_id = cur.fetchone()
@@ -57,30 +73,54 @@ def run_etl():
         if arp_id:
             # Busca Itens (Nested Request)
             arp_uuid = arp_id[0]
-            print(f"Processando itens da ARP {row.get('numeroArp')}...")
+            numero_arp = row.get('numeroAtaRegistroPreco')
+            print(f"Processando itens da ARP {numero_arp}...")
 
             try:
-                # Usando codigoArp como parâmetro (camelCase)
+                # Tentar buscar itens com parâmetros compostos e datas obrigatórias
+                # A API exige dataVigenciaInicialMin e Max. Usaremos a data da própria ARP.
+                data_vigencia = row.get('dataVigenciaInicial')
+
+                item_params = {
+                    "numeroCompra": row.get('numeroCompra'),
+                    "codigoUnidadeGerenciadora": row.get('codigoUnidadeGerenciadora'),
+                    "dataVigenciaInicialMin": data_vigencia,
+                    "dataVigenciaInicialMax": data_vigencia
+                }
+
                 itens_resp = requests.get(
                     "https://dadosabertos.compras.gov.br/modulo-arp/2_consultarARPItem",
-                    params={"codigoArp": row.get('codigoArp')}
+                    params=item_params
                 )
-                itens = itens_resp.json().get('resultado', [])
 
-                for item in itens:
-                    # Preparar vetor de busca (descrição + marca)
-                    # Nota: O Postgres preenche o TSVECTOR via Trigger ou Update,
-                    # mas aqui inserimos os dados brutos.
-                    cur.execute("""
-                        INSERT INTO itens_arp (arp_id, numero_item, descricao, valor_unitario, quantidade, unidade, marca, search_vector)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s,
-                        setweight(to_tsvector('portuguese', %s), 'A') || setweight(to_tsvector('portuguese', %s), 'B'))
-                    """, (
-                        arp_uuid, item.get('numeroItem'), item.get('descricaoItem'),
-                        item.get('valorUnitarioHomologado'), item.get('quantidadeHomologada'),
-                        item.get('unidadeMedida'), item.get('marca'),
-                        item.get('descricaoItem'), item.get('marca') or ''
-                    ))
+                if itens_resp.status_code == 200:
+                    itens = itens_resp.json().get('resultado', [])
+                    print(f"  - Encontrados {len(itens)} itens.")
+
+                    for item in itens:
+                        # Mapeamento de itens (precisa verificar chaves do item também, mas assumindo padrão similar)
+                        # numeroItem -> numeroItem
+                        # descricao -> descricaoItem
+                        # valorUnitario -> valorUnitarioHomologado
+                        # quantidade -> quantidadeHomologada
+                        # unidade -> unidadeMedida
+                        # marca -> marca
+
+                        item_uuid = str(uuid.uuid4())
+                        cur.execute("""
+                            INSERT INTO itens_arp (id, arp_id, numero_item, descricao, valor_unitario, quantidade, unidade, marca, search_vector)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s,
+                            setweight(to_tsvector('portuguese', %s), 'A') || setweight(to_tsvector('portuguese', %s), 'B'))
+                        """, (
+                            item_uuid,
+                            arp_uuid, item.get('numeroItem'), item.get('descricaoItem'),
+                            item.get('valorUnitarioHomologado'), item.get('quantidadeHomologada'),
+                            item.get('unidadeMedida'), item.get('marca'),
+                            item.get('descricaoItem'), item.get('marca') or ''
+                        ))
+                else:
+                    print(f"  - Erro ao buscar itens: {itens_resp.status_code} - {itens_resp.text}")
+
             except Exception as e:
                 print(f"Erro nos itens: {e}")
 
