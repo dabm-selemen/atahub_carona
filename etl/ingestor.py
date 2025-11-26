@@ -1,5 +1,6 @@
 import requests
 import psycopg2
+import uuid
 from datetime import datetime
 
 # Conexão DB (Hardcoded para dev, usar env vars em prod)
@@ -11,18 +12,26 @@ def run_etl():
     cur = conn.cursor()
 
     # 1. Configurar Busca na API do Governo
-    url = "https://dadosabertos.compras.gov.br/modulo-arp/11_consultar_arp"
+    # Endpoints atualizados conforme Swagger UI
+    url = "https://dadosabertos.compras.gov.br/modulo-arp/1_consultarARP"
     params = {
-        "data_inicio_vigencia": "2024-01-01",
-        "data_fim_vigencia": "2024-12-31",
+        "dataVigenciaInicialMin": "2023-01-01",
+        "dataVigenciaInicialMax": "2024-12-31",
         "pagina": 1
     }
 
     print("Buscando dados...")
     resp = requests.get(url, params=params)
-    data = resp.json().get('resultado', [])
+    if resp.status_code != 200:
+        print(f"Erro na API: {resp.status_code} - {resp.text}")
 
-    for row in data:
+    data = resp.json().get('resultado', [])
+    print(f"Encontrados {len(data)} registros.")
+
+    for i, row in enumerate(data):
+        if i == 0:
+            print(f"Exemplo de linha: {row}")
+
         # Salvar Órgão
         orgao = row.get('orgaoGerenciador', {})
         cur.execute("""
@@ -31,29 +40,30 @@ def run_etl():
         """, (str(orgao.get('codigo')), orgao.get('nome'), orgao.get('siglaUf')))
 
         # Salvar ARP
+        arp_uuid_val = str(uuid.uuid4())
         cur.execute("""
-            INSERT INTO arps (codigo_arp_api, numero_arp, uasg_id, data_inicio_vigencia, data_fim_vigencia, objeto)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            ON CONFLICT (codigo_arp_api) DO NOTHING
+            INSERT INTO arps (id, codigo_arp_api, numero_arp, uasg_id, data_inicio_vigencia, data_fim_vigencia, objeto)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (codigo_arp_api) DO UPDATE SET numero_arp = EXCLUDED.numero_arp
             RETURNING id
         """, (
+            arp_uuid_val,
             str(row.get('codigoArp')), row.get('numeroArp'), str(orgao.get('codigo')),
             row.get('dataInicioVigencia'), row.get('dataFimVigencia'), row.get('objeto')
         ))
 
         arp_id = cur.fetchone()
 
-        # Se arp_id é None, a ARP já existia e não retornou ID.
-        # Em produção, faríamos um SELECT para pegar o ID.
         if arp_id:
             # Busca Itens (Nested Request)
             arp_uuid = arp_id[0]
             print(f"Processando itens da ARP {row.get('numeroArp')}...")
 
             try:
+                # Usando codigoArp como parâmetro (camelCase)
                 itens_resp = requests.get(
-                    "https://dadosabertos.compras.gov.br/modulo-arp/11_consultar_itens_arp",
-                    params={"codigo_arp": row.get('codigoArp')}
+                    "https://dadosabertos.compras.gov.br/modulo-arp/2_consultarARPItem",
+                    params={"codigoArp": row.get('codigoArp')}
                 )
                 itens = itens_resp.json().get('resultado', [])
 

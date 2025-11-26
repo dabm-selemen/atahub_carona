@@ -1,106 +1,106 @@
 # AtaHub Carona
 
-A SaaS application for searching and comparing government procurement registration forms (ARPs - Atas de Registro de Preços) in Brazil.
+Uma aplicação SaaS para buscar e comparar Atas de Registro de Preços (ARPs) do governo brasileiro.
 
-## Overview
+## Visão Geral
 
-AtaHub Carona helps government agencies and suppliers find the best prices for products and services by searching through registered procurement contracts. The application provides a powerful search engine with full-text search capabilities in Portuguese.
+O AtaHub Carona ajuda órgãos governamentais e fornecedores a encontrar os melhores preços para produtos e serviços através da busca em contratos de compras registrados. A aplicação oferece um poderoso motor de busca com capacidades de busca textual completa em português.
 
-## Features
+## Funcionalidades
 
-- 🔍 **Full-text search** for procurement items using PostgreSQL's advanced text search
-- 📊 **Price comparison** across different government agencies
-- 🏢 **Organization filtering** by state and agency
-- 📅 **Validity tracking** to show only active contracts
-- 🐳 **Docker-ready** for easy deployment
+- 🔍 **Busca textual completa** para itens de compras usando busca avançada do PostgreSQL
+- 📊 **Comparação de preços** entre diferentes órgãos governamentais
+- 🏢 **Filtro por organização** por estado e órgão
+- 📅 **Rastreamento de vigência** para mostrar apenas contratos ativos
+- 🐳 **Pronto para Docker** para fácil implantação
 
-## Tech Stack
+## Stack Tecnológica
 
 ### Backend
-- **FastAPI** - Modern Python web framework
-- **PostgreSQL 15** - Database with full-text search extensions
-- **SQLAlchemy** - ORM for database operations
-- **Uvicorn** - ASGI server
+- **FastAPI** - Framework web Python moderno
+- **PostgreSQL 15** - Banco de dados com extensões de busca textual completa
+- **SQLAlchemy** - ORM para operações de banco de dados
+- **Uvicorn** - Servidor ASGI
 
 ### Frontend
-- **Next.js 16** - React framework with Turbopack
-- **Tailwind CSS v4** - Utility-first CSS framework
-- **TypeScript** - Type-safe JavaScript
-- **Shadcn UI** - Component library
+- **Next.js 16** - Framework React com Turbopack
+- **Tailwind CSS v4** - Framework CSS utilitário
+- **TypeScript** - JavaScript com tipagem segura
+- **Shadcn UI** - Biblioteca de componentes
 
-### Infrastructure
-- **Docker & Docker Compose** - Containerization
-- **PostgreSQL Extensions** - uuid-ossp, unaccent for text processing
+### Infraestrutura
+- **Docker & Docker Compose** - Containerização
+- **Extensões PostgreSQL** - uuid-ossp, unaccent para processamento de texto
 
-## Getting Started
+## Começando
 
-### Prerequisites
+### Pré-requisitos
 
-- Docker and Docker Compose installed
+- Docker e Docker Compose instalados
 - Git
 
-### Installation
+### Instalação
 
-1. Clone the repository:
+1. Clone o repositório:
 ```bash
-git clone https://github.com/YOUR_USERNAME/atahub_carona.git
+git clone https://github.com/SEU_USUARIO/atahub_carona.git
 cd atahub_carona
 ```
 
-2. Start the application with Docker:
+2. Inicie a aplicação com Docker:
 ```bash
 docker-compose up -d
 ```
 
-3. Access the application:
+3. Acesse a aplicação:
 - **Frontend**: http://localhost:3002
-- **Backend API**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs
+- **API Backend**: http://localhost:8000
+- **Documentação da API**: http://localhost:8000/docs
 
-### Services
+### Serviços
 
-The application consists of three Docker services:
+A aplicação consiste em três serviços Docker:
 
-| Service | Port | Description |
-|---------|------|-------------|
-| Frontend | 3002 | Next.js web application |
-| Backend | 8000 | FastAPI REST API |
-| Database | 5433 | PostgreSQL 15 database |
+| Serviço | Porta | Descrição |
+|---------|-------|-----------|
+| Frontend | 3002 | Aplicação web Next.js |
+| Backend | 8000 | API REST FastAPI |
+| Database | 5433 | Banco de dados PostgreSQL 15 |
 
-## Project Structure
+## Estrutura do Projeto
 
 ```
 atahub_carona/
-├── backend/              # FastAPI backend
-│   ├── main.py          # API endpoints
-│   ├── models.py        # Database models
-│   ├── database.py      # Database configuration
-│   ├── requirements.txt # Python dependencies
-│   └── Dockerfile       # Backend container config
-├── frontend/            # Next.js frontend
+├── backend/              # Backend FastAPI
+│   ├── main.py          # Endpoints da API
+│   ├── models.py        # Modelos do banco de dados
+│   ├── database.py      # Configuração do banco de dados
+│   ├── requirements.txt # Dependências Python
+│   └── Dockerfile       # Configuração do container backend
+├── frontend/            # Frontend Next.js
 │   ├── src/
-│   │   └── app/        # Next.js app directory
-│   ├── package.json    # Node dependencies
-│   └── Dockerfile      # Frontend container config
-├── etl/                # Data ingestion scripts
-│   └── ingestor.py     # ETL pipeline for ARP data
-├── docker-compose.yml  # Docker orchestration
-└── init_extensions.sql # PostgreSQL extensions
+│   │   └── app/        # Diretório app do Next.js
+│   ├── package.json    # Dependências Node
+│   └── Dockerfile      # Configuração do container frontend
+├── etl/                # Scripts de ingestão de dados
+│   └── ingestor.py     # Pipeline ETL para dados de ARP
+├── docker-compose.yml  # Orquestração Docker
+└── init_extensions.sql # Extensões PostgreSQL
 ```
 
-## API Endpoints
+## Endpoints da API
 
-### Search Items
+### Buscar Itens
 ```
-GET /buscar?q={search_term}
+GET /buscar?q={termo_busca}
 ```
 
-Search for procurement items using full-text search.
+Busca itens de compras usando busca textual completa.
 
-**Parameters:**
-- `q` (string): Search query in Portuguese
+**Parâmetros:**
+- `q` (string): Consulta de busca em português
 
-**Response:**
+**Resposta:**
 ```json
 [
   {
@@ -119,16 +119,16 @@ Search for procurement items using full-text search.
 ]
 ```
 
-### Health Check
+### Verificação de Saúde
 ```
 GET /
 ```
 
-Returns API status.
+Retorna o status da API.
 
-## Development
+## Desenvolvimento
 
-### Running Locally (without Docker)
+### Executando Localmente (sem Docker)
 
 **Backend:**
 ```bash
@@ -144,81 +144,92 @@ npm install
 npm run dev
 ```
 
-**Database:**
-Make sure PostgreSQL is running on port 5433 with the database `govcompras`.
+**Banco de Dados:**
+Certifique-se de que o PostgreSQL está rodando na porta 5433 com o banco de dados `govcompras`.
 
-### Environment Variables
+### Variáveis de Ambiente
 
 **Backend:**
-- `DATABASE_URL` - PostgreSQL connection string (default: `postgresql://postgres:password@localhost:5433/govcompras`)
+- `DATABASE_URL` - String de conexão PostgreSQL (padrão: `postgresql://postgres:password@localhost:5433/govcompras`)
 
 **Frontend:**
-- `NEXT_PUBLIC_API_URL` - Backend API URL (default: `http://localhost:8000`)
+- `NEXT_PUBLIC_API_URL` - URL da API backend (padrão: `http://localhost:8000`)
 
-## Docker Commands
+## Comandos Docker
 
-### Start all services
+### Iniciar todos os serviços
 ```bash
 docker-compose up -d
 ```
 
-### View logs
+### Visualizar logs
 ```bash
 docker-compose logs -f
 ```
 
-### Stop all services
+### Parar todos os serviços
 ```bash
 docker-compose down
 ```
 
-### Rebuild containers
+### Reconstruir containers
 ```bash
 docker-compose up --build -d
 ```
 
-### Restart a specific service
+### Reiniciar um serviço específico
 ```bash
 docker-compose restart frontend
 docker-compose restart backend
 ```
 
-## Database Schema
+## Schema do Banco de Dados
 
-### Tables
+### Tabelas
 
-- **orgaos** - Government agencies (UASG)
-- **arps** - Procurement registration forms
-- **itens_arp** - Items in each ARP with full-text search vector
+- **orgaos** - Órgãos governamentais (UASG)
+- **arps** - Atas de Registro de Preços
+- **itens_arp** - Itens em cada ARP com vetor de busca textual completa
 
-### Key Features
+### Recursos Principais
 
-- Full-text search using PostgreSQL's `tsvector` and `tsquery`
-- Portuguese language support with `unaccent` extension
-- GIN index for fast text search
-- UUID primary keys
+- Busca textual completa usando `tsvector` e `tsquery` do PostgreSQL
+- Suporte ao idioma português com extensão `unaccent`
+- Índice GIN para busca textual rápida
+- Chaves primárias UUID
 
-## Data Ingestion
+## Ingestão de Dados
 
-To populate the database with ARP data, use the ETL ingestor:
+Para popular o banco de dados com dados de ARP, use o ingestor ETL:
 
 ```bash
 cd etl
 python ingestor.py
 ```
 
-## Contributing
+## Como Tornar o Repositório Privado
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Para tornar este repositório privado no GitHub:
 
-## License
+1. Acesse o repositório no GitHub
+2. Clique em **Settings** (Configurações)
+3. Role até a seção **Danger Zone** (Zona de Perigo) no final da página
+4. Clique em **Change visibility** (Alterar visibilidade)
+5. Selecione **Make private** (Tornar privado)
+6. Confirme digitando o nome do repositório e clique em **I understand, change repository visibility**
 
-This project is licensed under the MIT License.
+## Contribuindo
 
-## Contact
+Contribuições são bem-vindas! Sinta-se à vontade para enviar um Pull Request.
 
-For questions or support, please open an issue on GitHub.
+## Licença
+
+Este projeto está licenciado sob a Licença MIT.
+
+## Contato
+
+Para perguntas ou suporte, por favor abra uma issue no GitHub.
 
 ---
 
-**Note:** This application is designed for Brazilian government procurement data. The search functionality uses Portuguese language processing.
+**Nota:** Esta aplicação foi projetada para dados de compras governamentais brasileiras. A funcionalidade de busca utiliza processamento de linguagem em português.
