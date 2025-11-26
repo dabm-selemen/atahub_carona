@@ -46,5 +46,9 @@ Thumbs.db
 *.sqlite
 postgres_data/
 
+# Database backups (ignore timestamped backups, keep latest)
+db_backups/*
+!db_backups/atahub_backup_latest.sql
+
 # Misc
 .gemini/

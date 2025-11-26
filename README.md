@@ -52,7 +52,17 @@ cd atahub_carona
 docker-compose up -d
 ```
 
-3. Acesse a aplicação:
+3. Restaure o banco de dados (ao clonar o repositório em uma nova máquina):
+```bash
+# Linux/Mac
+chmod +x scripts/*.sh
+./scripts/restore_db.sh
+
+# Windows
+scripts\restore_db.bat
+```
+
+4. Acesse a aplicação:
 - **Frontend**: http://localhost:3002
 - **API Backend**: http://localhost:8000
 - **Documentação da API**: http://localhost:8000/docs
@@ -206,6 +216,41 @@ Para popular o banco de dados com dados de ARP, use o ingestor ETL:
 cd etl
 python ingestor.py
 ```
+
+## Backup e Restauração do Banco de Dados
+
+O AtaHub inclui scripts para facilitar o backup e restauração do banco de dados PostgreSQL, permitindo que você trabalhe com o mesmo conjunto de dados em diferentes computadores.
+
+### Criar Backup
+
+**Linux/Mac:**
+```bash
+chmod +x scripts/backup_db.sh
+./scripts/backup_db.sh
+```
+
+**Windows:**
+```cmd
+scripts\backup_db.bat
+```
+
+O backup será salvo com codificação UTF-8 em:
+- `db_backups/atahub_backup_latest.sql` (última versão - commitada no Git)
+- `db_backups/atahub_backup_YYYYMMDD_HHMMSS.sql` (com timestamp - ignorada pelo Git)
+
+### Restaurar Backup
+
+**Linux/Mac:**
+```bash
+./scripts/restore_db.sh
+```
+
+**Windows:**
+```cmd
+scripts\restore_db.bat
+```
+
+**📚 Documentação Completa:** Veja [scripts/README.md](./scripts/README.md) para detalhes completos sobre backup, restauração e workflows recomendados.
 
 ## Como Tornar o Repositório Privado
 
