@@ -111,6 +111,9 @@ class ItemArp(Base):
     # Soft delete flag
     item_excluido = Column(Boolean, default=False, index=True)
 
+    # Full Text Search
+    search_vector = Column(TSVECTOR)
+
     # ETL tracking
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
     updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)

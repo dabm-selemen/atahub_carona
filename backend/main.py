@@ -171,7 +171,8 @@ def buscar_itens(
     # State filter
     if ufs:
         uf_list = [uf.strip().upper() for uf in ufs.split(",")]
-        where_clauses.append(f"orgaos.uf IN ({','.join([f\"'{uf}\'\" for uf in uf_list])})")
+        uf_str = ",".join([f"'{uf}'" for uf in uf_list])
+        where_clauses.append(f"orgaos.uf IN ({uf_str})")
 
     # Price filter
     if min_price is not None:
@@ -272,7 +273,8 @@ def comparar_precos(
 
     if ufs:
         uf_list = [uf.strip().upper() for uf in ufs.split(",")]
-        where_clauses.append(f"orgaos.uf IN ({','.join([f\"'{uf}\'\" for uf in uf_list])})")
+        uf_str = ",".join([f"'{uf}'" for uf in uf_list])
+        where_clauses.append(f"orgaos.uf IN ({uf_str})")
 
     where_sql = " AND ".join(where_clauses)
 
@@ -607,7 +609,8 @@ def export_search(
 
     if ufs:
         uf_list = [uf.strip().upper() for uf in ufs.split(",")]
-        where_clauses.append(f"orgaos.uf IN ({','.join([f\"'{uf}\'\" for uf in uf_list])})")
+        uf_str = ",".join([f"'{uf}'" for uf in uf_list])
+        where_clauses.append(f"orgaos.uf IN ({uf_str})")
 
     if min_price is not None:
         where_clauses.append("itens.valor_unitario >= :min_price")

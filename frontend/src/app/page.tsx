@@ -7,7 +7,7 @@ import {
   LineChart,
   Building2,
   FileSpreadsheet,
-  Shield Check,
+  ShieldCheck,
   ArrowRight,
   Sparkles,
   CheckCircle2
